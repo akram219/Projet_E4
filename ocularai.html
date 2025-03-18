@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OcularAI</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        display: flex;
+      }
+      .sidebar {
+        width: 250px;
+        background: #f8f9fa;
+        padding: 20px;
+        height: 100vh;
+      }
+      .sidebar h2 {
+        color: #2a56c6;
+      }
+      .sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+      .sidebar ul li {
+        padding: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sidebar ul li:hover {
+        background: #ddd;
+      }
+      .main-content {
+        flex-grow: 1;
+        padding: 20px;
+      }
+      .camera-container {
+        display: none;
+      }
+      video {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 8px;
+      }
+      canvas {
+        width: 100px;
+        height: auto;
+        margin: 5px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+      }
+      .patient-list {
+        margin-top: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+      }
+      .patient-folder {
+        background: #f3f3f3;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #2a56c6;
+      }
+      .patient-folder h3 {
+        margin-top: 0;
+        color: #2a56c6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .photo-gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+        padding: 10px;
+        background: #fff;
+        border-radius: 5px;
+      }
+      .photo-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 120px;
+      }
+      .folder-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 5px;
+      }
+      .folder-toggle {
+        background: none;
+        border: none;
+        color: #2a56c6;
+        cursor: pointer;
+        font-size: 20px;
+      }
+      .diagnosis-notes {
+        width: 100%;
+        margin-top: 10px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .intro-page {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .feature-box {
+        background: #f0f7ff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #2a56c6;
+      }
+      .intro-banner {
+        background: linear-gradient(135deg, #2a56c6, #3c88e4);
+        color: white;
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+      .intro-banner h1 {
+        margin-top: 0;
+        font-size: 2.5em;
+      }
+      .intro-banner p {
+        font-size: 1.2em;
+        margin-bottom: 0;
+      }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+      }
+      .feature-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .feature-icon {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        color: #2a56c6;
+      }
+      .get-started-btn {
+        background: #2a56c6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 4px;
+        font-size: 1.1em;
+        cursor: pointer;
+        margin-top: 20px;
+        transition: background 0.3s;
+      }
+      .get-started-btn:hover {
+        background: #1a46b6;
+      }
+      /* Styles pour la carte */
+      #map {
+        height: 400px;
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .map-container {
+        padding: 20px 0;
+        margin: 0 auto;
+      }
+      .map-title {
+        color: #2a56c6;
+        margin-bottom: 20px;
+      }
+      .esiee-info {
+        background: #f0f4ff;
+        border-left: 4px solid #2a56c6;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+      }
+      .esiee-info h3 {
+        color: #2a56c6;
+        margin-top: 0;
+      }
+      .esiee-info p {
+        margin-bottom: 10px;
+      }
+      .esiee-info a {
+        color: #2a56c6;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .esiee-info a:hover {
+        text-decoration: underline;
+      }
+      /* Styles pour la page de connexion */
+      .login-container {
+        max-width: 400px;
+        margin: 50px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      .login-container h2 {
+        color: #2a56c6;
+        margin-bottom: 20px;
+      }
+      .login-form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .login-form input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .login-form button {
+        background: #2a56c6;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1em;
+      }
+      .login-form button:hover {
+        background: #1a46b6;
+      }
+      .user-type-selection {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .user-type-btn {
+        background: #f0f7ff;
+        border: 1px solid #2a56c6;
+        color: #2a56c6;
+        padding: 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: all 0.3s;
+      }
+      .user-type-btn:hover {
+        background: #e0f0ff;
+      }
+      .error-message {
+        color: #d32f2f;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar" id="sidebar" style="display: none">
+      <h2>OcularAI</h2>
+      <ul id="menu">
+        <li onclick="showPage('intro')">🏠 Présentation</li>
+        <li onclick="showPage('capture')" id="menu-capture">
+          📸 Capture d'image
+        </li>
+        <li onclick="showPage('patients')" id="menu-patients">👨‍⚕️ Patients</li>
+      </ul>
+    </div>
+    <div class="main-content" id="content">
+      <div id="auth" class="page">
+        <div class="login-container">
+          <h2>Bienvenue sur OcularAI</h2>
+          <p>Veuillez sélectionner votre profil pour continuer :</p>
+
+          <div class="user-type-selection">
+            <button
+              class="user-type-btn"
+              onclick="showUserTypeForm('professional')"
+            >
+              Je suis un professionnel de santé
+            </button>
+            <button class="user-type-btn" onclick="showUserTypeForm('patient')">
+              Je suis un patient
+            </button>
+          </div>
+
+          <div id="professional-form" style="display: none">
+            <h3>Connexion Professionnel</h3>
+            <div class="login-form">
+              <input
+                type="text"
+                id="username"
+                placeholder="Identifiant"
+                required
+              />
+              <input
+                type="password"
+                id="password"
+                placeholder="Mot de passe"
+                required
+              />
+              <button onclick="loginProfessional()">Se connecter</button>
+            </div>
+            <p id="login-error" class="error-message" style="display: none">
+              Identifiant ou mot de passe incorrect
+            </p>
+          </div>
+
+          <div id="patient-form" style="display: none">
+            <h3>Accès Patient</h3>
+            <p>Vous allez accéder à la version patient de l'application.</p>
+            <button class="get-started-btn" onclick="loginPatient()">
+              Continuer
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="intro" class="page intro-page" style="display: none">
+        <div class="intro-banner">
+          <h1>Bienvenue sur OcularAI</h1>
+          <p>
+            Solution innovante pour l'imagerie oculaire et la gestion des
+            patients
+          </p>
+        </div>
+
+        <div class="feature-box">
+          <h2>Qu'est-ce qu'OcularAI ?</h2>
+          <p>
+            OcularAI est une application web avancée conçue pour les
+            professionnels de la santé oculaire. Elle permet de capturer,
+            organiser et analyser des images oculaires de patients de manière
+            efficace et sécurisée.
+          </p>
+          <p>
+            Grâce à notre technologie d'intelligence artificielle intégrée, les
+            spécialistes peuvent améliorer leur diagnostic et le suivi des
+            pathologies oculaires.
+          </p>
+        </div>
+
+        <h2>Fonctionnalités principales</h2>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">📸</div>
+            <h3>Capture d'images</h3>
+            <p>
+              Capturez des images oculaires de haute qualité en rafale pour un
+              examen complet.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📁</div>
+            <h3>Dossiers patients</h3>
+            <p>
+              Organisez automatiquement les images dans des dossiers patients
+              structurés.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Analyse visuelle</h3>
+            <p>
+              Suivez l'évolution des pathologies dans le temps avec des
+              comparaisons visuelles.
+            </p>
+          </div>
+        </div>
+
+        <div class="feature-box">
+          <h2>Comment démarrer ?</h2>
+          <p>
+            Commencez par créer un nouveau dossier patient et capturez vos
+            premières images. Vous pourrez ensuite accéder à l'historique
+            complet et ajouter des notes médicales pour chaque patient.
+          </p>
+          <button class="get-started-btn" onclick="showPage('capture')">
+            Commencer maintenant
+          </button>
+        </div>
+
+        <!-- Ajout de la carte ESIEE -->
+        <div class="map-container">
+          <h2 class="map-title">Localisation du projet OcularAI</h2>
+          <p>
+            OcularAI est développé à l'ESIEE Paris, une grande école
+            d'ingénieurs spécialisée dans les technologies du numérique et de la
+            santé.
+          </p>
+
+          <div id="map"></div>
+
+          <div class="esiee-info">
+            <h3>ESIEE Paris</h3>
+            <p>
+              <strong>Adresse:</strong> 2 Boulevard Blaise Pascal, 93160
+              Noisy-le-Grand
+            </p>
+            <p>
+              <strong>Développement:</strong> Centre principal de recherche et
+              développement du projet OcularAI
+            </p>
+            <p>
+              L'ESIEE Paris est un pôle d'excellence en innovation
+              technologique, particulièrement dans les domaines de
+              l'informatique, de l'électronique et des sciences de la santé. Le
+              projet OcularAI y est développé dans le cadre des recherches sur
+              l'intelligence artificielle appliquée à la santé.
+            </p>
+            <p>
+              Le dispositif OcularAI est conçu pour être utilisé à l'échelle
+              mondiale, particulièrement dans les régions où l'accès aux soins
+              ophtalmologiques est limité.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="capture" class="page" style="display: none">
+        <h2>📸 Capture d'image</h2>
+        <div class="form-container">
+          <label>Nom du patient :</label>
+          <input type="text" id="patientName" required />
+          <label>ID du patient :</label>
+          <input type="text" id="patientId" required />
+          <button onclick="startCamera()">Suivant</button>
+        </div>
+        <div class="camera-container" id="camera-container">
+          <video id="video" autoplay></video>
+          <button onclick="captureBurstPhotos()">Prendre une rafale</button>
+          <div id="photoContainer"></div>
+        </div>
+      </div>
+
+      <div id="patients" class="page" style="display: none">
+        <h2>👨‍⚕️ Dossiers patients</h2>
+        <div class="patient-list" id="patientList">
+          <h3>Liste des dossiers patients</h3>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Structure de données pour stocker les dossiers patients et leurs photos
+      let patientFolders = {};
+      let userType = null;
+
+      // Afficher la page d'authentification par défaut au chargement
+      window.onload = function () {
+        showPage("auth");
+      };
+
+      function showUserTypeForm(type) {
+        document.getElementById("professional-form").style.display = "none";
+        document.getElementById("patient-form").style.display = "none";
+
+        if (type === "professional") {
+          document.getElementById("professional-form").style.display = "block";
+        } else if (type === "patient") {
+          document.getElementById("patient-form").style.display = "block";
+        }
+      }
+
+      function loginProfessional() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        // Vérifier les identifiants
+        if (username === "admin" && password === "doctor") {
+          userType = "professional";
+          document.getElementById("login-error").style.display = "none";
+          setupUserInterface();
+          showPage("intro");
+        } else {
+          document.getElementById("login-error").style.display = "block";
+        }
+      }
+
+      function loginPatient() {
+        userType = "patient";
+        setupUserInterface();
+        showPage("intro");
+      }
+
+      function setupUserInterface() {
+        // Afficher la barre latérale
+        document.getElementById("sidebar").style.display = "block";
+
+        // Configurer le menu selon le type d'utilisateur
+        if (userType === "professional") {
+          // Professionnel de santé : accès complet
+          document.getElementById("menu-capture").style.display = "flex";
+          document.getElementById("menu-patients").style.display = "flex";
+        } else if (userType === "patient") {
+          // Patient : accès limité
+          document.getElementById("menu-capture").style.display = "flex";
+          document.getElementById("menu-patients").style.display = "none";
+        }
+      }
+
+      function showPage(page) {
+        // Si on essaie d'accéder à une page protégée en tant que patient
+        if (userType === "patient" && page === "patients") {
+          alert(
+            "Vous n'avez pas accès à cette fonctionnalité en tant que patient."
+          );
+          return;
+        }
+
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => (p.style.display = "none"));
+        document.getElementById(page).style.display = "block";
+
+        if (page === "patients") {
+          displayPatientFolders();
+        }
+      }
+
+      function startCamera() {
+        let name = document.getElementById("patientName").value;
+        let id = document.getElementById("patientId").value;
+        if (!name || !id) {
+          alert("Veuillez remplir les informations du patient.");
+          return;
+        }
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          alert("Votre navigateur ne supporte pas l'accès à la caméra.");
+          return;
+        }
+        navigator.mediaDevices
+          .getUserMedia({ video: { facingMode: "environment" } })
+          .then((stream) => {
+            document.getElementById("camera-container").style.display = "block";
+            let video = document.getElementById("video");
+            video.srcObject = stream;
+          })
+          .catch((err) => {
+            console.error("Erreur d'accès à la caméra :", err);
+            alert(
+              "Impossible d'accéder à la caméra. Vérifiez les autorisations et utilisez HTTPS."
+            );
+          });
+      }
+
+      function captureBurstPhotos() {
+        let video = document.getElementById("video");
+        let name = document.getElementById("patientName").value;
+        let id = document.getElementById("patientId").value;
+        let patientKey = `${name} (${id})`;
+
+        // Créer un dossier pour le patient s'il n'existe pas
+        if (!patientFolders[patientKey]) {
+          patientFolders[patientKey] = {
+            name: name,
+            id: id,
+            sessions: [],
+            notes: "",
+          };
+        }
+
+        // Créer une nouvelle session avec date actuelle
+        let currentDate = new Date();
+        let sessionKey = currentDate.toLocaleDateString();
+        let sessionTime = currentDate.toLocaleTimeString();
+
+        let session = {
+          date: sessionKey,
+          time: sessionTime,
+          photos: [],
+        };
+
+        // Ajouter la session au dossier patient
+        patientFolders[patientKey].sessions.push(session);
+
+        // Prendre les photos en rafale
+        let photosTaken = 0;
+
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            let canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas
+              .getContext("2d")
+              .drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Ajouter la photo à la session
+            let photoIndex = patientFolders[patientKey].sessions.length - 1;
+            patientFolders[patientKey].sessions[photoIndex].photos.push({
+              dataUrl: canvas.toDataURL("image/jpeg"),
+              timestamp: new Date().toLocaleTimeString(),
+            });
+
+            photosTaken++;
+            console.log(`Photo ${photosTaken} enregistrée pour: ${patientKey}`);
+
+            // Quand toutes les photos sont prises, notifier l'utilisateur
+            if (photosTaken === 5) {
+              alert("Photos enregistrées dans le dossier du patient.");
+
+              // Afficher un aperçu des photos
+              let photoContainer = document.getElementById("photoContainer");
+              photoContainer.innerHTML = "";
+              let sessionPhotos =
+                patientFolders[patientKey].sessions[photoIndex].photos;
+
+              sessionPhotos.forEach((photo) => {
+                let img = document.createElement("img");
+                img.src = photo.dataUrl;
+                img.style.width = "80px";
+                img.style.height = "60px";
+                img.style.margin = "5px";
+                img.style.border = "1px solid #ccc";
+                photoContainer.appendChild(img);
+              });
+
+              // Ajouter un bouton pour voir le dossier complet
+              let viewButton = document.createElement("button");
+              viewButton.innerText = "Voir le dossier patient";
+              viewButton.onclick = function () {
+                showPage("patients");
+              };
+              photoContainer.appendChild(document.createElement("br"));
+              photoContainer.appendChild(viewButton);
+            }
+          }, i * 500);
+        }
+      }
+
+      function displayPatientFolders() {
+        let patientList = document.getElementById("patientList");
+        patientList.innerHTML = "<h3>Liste des dossiers patients</h3>";
+
+        if (Object.keys(patientFolders).length === 0) {
+          patientList.innerHTML += "<p>Aucun dossier patient disponible.</p>";
+          return;
+        }
+
+        // Créer un dossier pour chaque patient
+        for (let patientKey in patientFolders) {
+          let patient = patientFolders[patientKey];
+
+          // Créer l'élément du dossier
+          let folderDiv = document.createElement("div");
+          folderDiv.className = "patient-folder";
+
+          // En-tête du dossier avec contrôles
+          let folderHeader = document.createElement("h3");
+          folderHeader.innerHTML = `${patient.name} (ID: ${patient.id})`;
+
+          // Bouton pour agrandir/réduire le dossier
+          let toggleButton = document.createElement("button");
+          toggleButton.className = "folder-toggle";
+          toggleButton.innerHTML = "📂";
+          toggleButton.onclick = function () {
+            let content =
+              this.parentNode.parentNode.querySelector(".folder-content");
+            if (content.style.display === "none") {
+              content.style.display = "block";
+              this.innerHTML = "📂";
+            } else {
+              content.style.display = "none";
+              this.innerHTML = "📁";
+            }
+          };
+          folderHeader.appendChild(toggleButton);
+          folderDiv.appendChild(folderHeader);
+
+          // Contenu du dossier
+          let folderContent = document.createElement("div");
+          folderContent.className = "folder-content";
+
+          // Notes du dossier
+          let notesDiv = document.createElement("div");
+          let notesLabel = document.createElement("label");
+          notesLabel.innerText = "Notes médicales:";
+          let notesInput = document.createElement("textarea");
+          notesInput.className = "diagnosis-notes";
+          notesInput.value = patient.notes || "";
+          notesInput.placeholder = "Ajouter des notes médicales ici...";
+          notesInput.onchange = function () {
+            patient.notes = this.value;
+          };
+          notesDiv.appendChild(notesLabel);
+          notesDiv.appendChild(notesInput);
+          folderContent.appendChild(notesDiv);
+
+          // Créer une section pour chaque session
+          if (patient.sessions.length > 0) {
+            patient.sessions.forEach((session, index) => {
+              let sessionDiv = document.createElement("div");
+              sessionDiv.style.marginTop = "15px";
+              sessionDiv.style.borderTop = "1px solid #ddd";
+              sessionDiv.style.paddingTop = "10px";
+
+              let sessionTitle = document.createElement("h4");
+              sessionTitle.innerText = `Session du ${session.date} à ${session.time}`;
+              sessionDiv.appendChild(sessionTitle);
+
+              // Galerie de photos pour cette session
+              let photoGallery = document.createElement("div");
+              photoGallery.className = "photo-gallery";
+
+              session.photos.forEach((photo, photoIndex) => {
+                let photoItem = document.createElement("div");
+                photoItem.className = "photo-item";
+
+                let img = document.createElement("img");
+                img.src = photo.dataUrl;
+                img.style.width = "100px";
+                img.style.height = "75px";
+                img.style.objectFit = "cover";
+                img.style.borderRadius = "4px";
+
+                let photoTime = document.createElement("small");
+                photoTime.innerText = photo.timestamp;
+
+                photoItem.appendChild(img);
+                photoItem.appendChild(photoTime);
+                photoGallery.appendChild(photoItem);
+              });
+
+              sessionDiv.appendChild(photoGallery);
+              folderContent.appendChild(sessionDiv);
+            });
+          } else {
+            let noSessions = document.createElement("p");
+            noSessions.innerText = "Aucune séance d'imagerie disponible.";
+            folderContent.appendChild(noSessions);
+          }
+
+          folderDiv.appendChild(folderContent);
+          patientList.appendChild(folderDiv);
+        }
+      }
+
+      // Fonction d'initialisation de la carte
+      function initMap() {
+        // Coordonnées de l'ESIEE Paris
+        const esieePosition = { lat: 48.8419, lng: 2.5876 };
+
+        // Créer la carte centrée sur l'ESIEE Paris
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 15,
+          center: esieePosition,
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true,
+        });
+
+        // Ajouter un marqueur pour l'ESIEE Paris
+        const marker = new google.maps.Marker({
+          position: esieePosition,
+          map: map,
+          title: "ESIEE Paris",
+          animation: google.maps.Animation.DROP,
+        });
+
+        // Ajouter une info-bulle au marqueur
+        const infoWindow = new google.maps.InfoWindow({
+          content: `
+                    <div style="width: 250px">
+                        <h3 style="color: #2a56c6; margin-top: 0">ESIEE Paris</h3>
+                        <p>Centre de développement principal du projet OcularAI</p>
+                        <p>2 Boulevard Blaise Pascal<br>93160 Noisy-le-Grand</p>
+                    </div>
+                `,
+        });
+
+        // Ouvrir l'info-bulle au chargement de la carte
+        infoWindow.open(map, marker);
+
+        // Ouvrir l'info-bulle au clic sur le marqueur
+        marker.addListener("click", () => {
+          infoWindow.open(map, marker);
+        });
+      }
+    </script>
+
+    <!-- Charger l'API Google Maps avec une clé API -->
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?callback=initMap"
+    ></script>
+  </body>
+</html>
